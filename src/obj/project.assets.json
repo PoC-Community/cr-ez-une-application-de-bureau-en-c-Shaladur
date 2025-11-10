@@ -1416,19 +1416,19 @@
     ]
   },
   "packageFolders": {
-    "/home/milok/.nuget/packages/": {}
+    "/home/papyrus/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/milok/C--workshop-template/src/TodoListApp.csproj",
+      "projectUniqueName": "/home/papyrus/workshop/csharp_poc/cr-ez-une-application-de-bureau-en-c-Shaladur/src/TodoListApp.csproj",
       "projectName": "TodoListApp",
-      "projectPath": "/home/milok/C--workshop-template/src/TodoListApp.csproj",
-      "packagesPath": "/home/milok/.nuget/packages/",
-      "outputPath": "/home/milok/C--workshop-template/src/obj/",
+      "projectPath": "/home/papyrus/workshop/csharp_poc/cr-ez-une-application-de-bureau-en-c-Shaladur/src/TodoListApp.csproj",
+      "packagesPath": "/home/papyrus/.nuget/packages/",
+      "outputPath": "/home/papyrus/workshop/csharp_poc/cr-ez-une-application-de-bureau-en-c-Shaladur/src/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/home/milok/.nuget/NuGet/NuGet.Config"
+        "/home/papyrus/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
@@ -1446,13 +1446,7 @@
         "warnAsError": [
           "NU1605"
         ]
-      },
-      "restoreAuditProperties": {
-        "enableAudit": "true",
-        "auditLevel": "low",
-        "auditMode": "direct"
-      },
-      "SdkAnalysisLevel": "9.0.100"
+      }
     },
     "frameworks": {
       "net8.0": {
@@ -1490,22 +1484,12 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
-        "downloadDependencies": [
-          {
-            "name": "Microsoft.AspNetCore.App.Ref",
-            "version": "[8.0.20, 8.0.20]"
-          },
-          {
-            "name": "Microsoft.NETCore.App.Host.linux-x64",
-            "version": "[8.0.20, 8.0.20]"
-          }
-        ],
         "frameworkReferences": {
           "Microsoft.NETCore.App": {
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.110/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.121/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

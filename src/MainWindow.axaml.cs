@@ -13,25 +13,53 @@ namespace TodoListApp;
 public partial class MainWindow : Window
 {
     private ObservableCollection<TaskItem> _tasks = new();
+    private System.Collections.Generic.List<TaskItem> _allTasks = new();
 
     public MainWindow()
     {
         InitializeComponent();
         TaskList.ItemsSource = _tasks;
 
-        AddButton.Click += OnAddClick;
-        DeleteButton.Click += OnDeleteClick;
-        SaveButton.Click += OnSaveClick;
-        LoadTasks();
+    AddButton.Click += OnAddClick;
+    DeleteButton.Click += OnDeleteClick;
+    SaveButton.Click += OnSaveClick;
+    FilterButton.Click += OnFilterClick;
+    ClearFilterButton.Click += OnClearFilterClick;
+
+    LoadTasks();
     }
 
     private void OnAddClick(object? sender, RoutedEventArgs e)
     {
-        if (!string.IsNullOrWhiteSpace(TaskInput.Text))
+        var title = TaskInput.Text?.Trim();
+        var tagsText = string.Empty;
+        try { tagsText = TagInput.Text ?? string.Empty; } catch { }
+
+        if (!string.IsNullOrWhiteSpace(title))
         {
-            _tasks.Add(new TaskItem { Title = TaskInput.Text });
+            var tags = ParseTags(tagsText);
+            var item = new TaskItem { Title = title, Tags = tags };
+            _allTasks.Add(item);
+            _tasks.Add(item);
             TaskInput.Text = string.Empty;
+            try { TagInput.Text = string.Empty; } catch { }
         }
+    }
+
+        private System.Collections.Generic.List<string> ParseTags(string input)
+    {
+        var result = new System.Collections.Generic.List<string>();
+        if (string.IsNullOrWhiteSpace(input)) return result;
+
+        var parts = input.Split(',');
+        foreach (var p in parts)
+        {
+            var t = p.Trim();
+            if (t.Length == 0) continue;
+            if (!result.Contains(t))
+                result.Add(t);
+        }
+        return result;
     }
 
     private void LoadTasks()
@@ -52,10 +80,14 @@ public partial class MainWindow : Window
             var list = JsonSerializer.Deserialize<List<TaskItem>>(json, options);
 
             _tasks.Clear();
+            _allTasks.Clear();
             if (list != null)
             {
                 foreach (var item in list)
+                {
+                    _allTasks.Add(item);
                     _tasks.Add(item);
+                }
 
                 try { StatusText.Text = $"Loaded {_tasks.Count} tasks from: {path}"; } catch { }
             }
@@ -81,7 +113,41 @@ public partial class MainWindow : Window
         if (TaskList.SelectedItem is TaskItem selected)
         {
             _tasks.Remove(selected);
+            try { _allTasks.Remove(selected); } catch { }
         }
+    }
+
+    private void OnFilterClick(object? sender, RoutedEventArgs e)
+    {
+        var tag = string.Empty;
+        try { tag = FilterInput.Text?.Trim() ?? string.Empty; } catch { }
+        ApplyFilter(tag);
+    }
+
+    private void OnClearFilterClick(object? sender, RoutedEventArgs e)
+    {
+        try { FilterInput.Text = string.Empty; } catch { }
+        ApplyFilter(string.Empty);
+    }
+
+    private void ApplyFilter(string tag)
+    {
+        _tasks.Clear();
+        if (string.IsNullOrWhiteSpace(tag))
+        {
+            foreach (var t in _allTasks) _tasks.Add(t);
+            try { StatusText.Text = "Showing all tasks."; } catch { }
+            return;
+        }
+
+        var lowered = tag.Trim();
+        foreach (var t in _allTasks)
+        {
+            if (t.Tags != null && t.Tags.Exists(x => string.Equals(x, lowered, StringComparison.OrdinalIgnoreCase)))
+                _tasks.Add(t);
+        }
+
+        try { StatusText.Text = $"Filtered by tag: {tag} (showing {_tasks.Count})"; } catch { }
     }
 
         private async void OnSaveClick(object? sender, RoutedEventArgs e)
@@ -103,7 +169,7 @@ public partial class MainWindow : Window
                 WriteIndented = true
             };
 
-            var list = new List<TaskItem>(_tasks);
+            var list = new List<TaskItem>(_allTasks);
 
             var json = JsonSerializer.Serialize(list, options);
 

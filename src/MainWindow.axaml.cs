@@ -1,8 +1,10 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Input;
 using System.Collections.ObjectModel;
 using TodoListApp.Models;
 using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using System.Text.Json;
 using System;
@@ -25,6 +27,11 @@ public partial class MainWindow : Window
     SaveButton.Click += OnSaveClick;
     FilterButton.Click += OnFilterClick;
     ClearFilterButton.Click += OnClearFilterClick;
+    FilterTodayButton.Click += OnFilterTodayClick;
+    FilterWeekButton.Click += OnFilterWeekClick;
+    FilterOverdueButton.Click += OnFilterOverdueClick;
+    CompleteAllButton.Click += OnCompleteAllClick;
+    ClearCompletedButton.Click += OnClearCompletedClick;
 
     LoadTasks();
     }
@@ -38,11 +45,15 @@ public partial class MainWindow : Window
         if (!string.IsNullOrWhiteSpace(title))
         {
             var tags = ParseTags(tagsText);
-            var item = new TaskItem { Title = title, Tags = tags };
+            DateTime? due = null;
+            try { due = DueDatePicker.SelectedDate?.Date; } catch { }
+
+            var item = new TaskItem { Title = title, Tags = tags, DueDate = due };
             _allTasks.Add(item);
             _tasks.Add(item);
             TaskInput.Text = string.Empty;
             try { TagInput.Text = string.Empty; } catch { }
+            try { DueDatePicker.SelectedDate = null; } catch { }
         }
     }
 
@@ -148,6 +159,91 @@ public partial class MainWindow : Window
         }
 
         try { StatusText.Text = $"Filtered by tag: {tag} (showing {_tasks.Count})"; } catch { }
+    }
+
+    private void OnFilterTodayClick(object? sender, RoutedEventArgs e)
+    {
+        var today = DateTime.Today;
+        _tasks.Clear();
+        foreach (var t in _allTasks)
+        {
+            if (t.DueDate.HasValue && t.DueDate.Value.Date == today)
+                _tasks.Add(t);
+        }
+        try { StatusText.Text = $"Filtered: Today ({_tasks.Count})"; } catch { }
+    }
+
+    private void OnFilterWeekClick(object? sender, RoutedEventArgs e)
+    {
+        var today = DateTime.Today;
+        var end = today.AddDays(7);
+        _tasks.Clear();
+        foreach (var t in _allTasks)
+        {
+            if (t.DueDate.HasValue && t.DueDate.Value.Date >= today && t.DueDate.Value.Date <= end)
+                _tasks.Add(t);
+        }
+        try { StatusText.Text = $"Filtered: This week ({_tasks.Count})"; } catch { }
+    }
+
+    private void OnFilterOverdueClick(object? sender, RoutedEventArgs e)
+    {
+        var today = DateTime.Today;
+        _tasks.Clear();
+        foreach (var t in _allTasks)
+        {
+            if (t.DueDate.HasValue && t.DueDate.Value.Date < today && !t.IsCompleted)
+                _tasks.Add(t);
+        }
+        try { StatusText.Text = $"Filtered: Overdue ({_tasks.Count})"; } catch { }
+    }
+
+        // Inline edit handlers
+        private void OnTitleDoubleTapped(object? sender, PointerReleasedEventArgs e)
+        {
+            if (sender is Avalonia.Controls.TextBlock tb && tb.DataContext is TaskItem ti)
+            {
+                ti.IsEditing = true;
+            }
+        }
+
+        private void OnTitleLostFocus(object? sender, RoutedEventArgs e)
+        {
+            if (sender is Avalonia.Controls.TextBox tb && tb.DataContext is TaskItem ti)
+            {
+                ti.IsEditing = false;
+            }
+        }
+
+        private void OnTitleEditKeyDown(object? sender, KeyEventArgs e)
+        {
+            if (sender is Avalonia.Controls.TextBox tb && tb.DataContext is TaskItem ti)
+            {
+                if (e.Key == Key.Enter || e.Key == Key.Escape)
+                {
+                    ti.IsEditing = false;
+                }
+            }
+        }
+
+    private void OnCompleteAllClick(object? sender, RoutedEventArgs e)
+    {
+        foreach (var t in _allTasks)
+        {
+            t.IsCompleted = true;
+        }
+        ApplyFilter(FilterInput.Text ?? string.Empty);
+        try { StatusText.Text = "All tasks marked completed."; } catch { }
+    }
+
+    private void OnClearCompletedClick(object? sender, RoutedEventArgs e)
+    {
+        var remaining = _allTasks.Where(x => !x.IsCompleted).ToList();
+        _allTasks.Clear();
+        foreach (var r in remaining) _allTasks.Add(r);
+
+        ApplyFilter(FilterInput.Text ?? string.Empty);
+        try { StatusText.Text = "Cleared completed tasks."; } catch { }
     }
 
         private async void OnSaveClick(object? sender, RoutedEventArgs e)

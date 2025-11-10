@@ -1,12 +1,30 @@
 <Window xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:models="using:TodoListApp.Models"
+    xmlns:converters="clr-namespace:TodoListApp.Converters;assembly=TodoListApp"
         x:Class="TodoListApp.MainWindow"
         Title="To-Do List"
         Width="400" Height="500">
 
-    <StackPanel Margin="20">
-        <TextBlock Text="My To-Do List" FontSize="24" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+    <Window.Resources>
+        <converters:BooleanNegationConverter x:Key="NotConverter"/>
+    </Window.Resources>
+
+    <Window.Styles>
+        <!-- Global styles to ensure text is visible on dark backgrounds -->
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="Button">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+    </Window.Styles>
+
+    <StackPanel Margin="20" Background="#01120A">
+        <TextBlock Text="My To-Do List" FontSize="24" HorizontalAlignment="Center" Margin="0,0,0,10" Foreground="White"/>
 
         <StackPanel Orientation="Vertical" Margin="0,0,0,10">
             <StackPanel Orientation="Horizontal">
@@ -14,20 +32,28 @@
                 <Button x:Name="AddButton" Content="Add" Margin="10,0,0,0" Width="80"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                <TextBox x:Name="TagInput" Width="150" Watermark="Tags (comma-separated)"/>
-                <TextBox x:Name="FilterInput" Width="100" Margin="6,0,0,0" Watermark="Filter tag"/>
-                <Button x:Name="FilterButton" Content="Filter" Margin="10,0,0,0" Width="80"/>
-                <Button x:Name="ClearFilterButton" Content="Clear" Margin="10,0,0,0" Width="60"/>
+                <TextBox x:Name="TagInput" Width="120" Watermark="Tags (comma-separated)"/>
+                <DatePicker x:Name="DueDatePicker" Width="120" Margin="6,0,0,0"/>
+                <TextBox x:Name="FilterInput" Width="80" Margin="6,0,0,0" Watermark="Filter tag"/>
+                <Button x:Name="FilterButton" Content="Filter" Margin="6,0,0,0" Width="60" Background="#B8F2C0"/>
+                <Button x:Name="ClearFilterButton" Content="Clear" Margin="6,0,0,0" Width="60"/>
+                <Button x:Name="FilterTodayButton" Content="Today" Margin="12,0,0,0" Width="60" Background="#B8F2C0"/>
+                <Button x:Name="FilterWeekButton" Content="This week" Margin="6,0,0,0" Width="80" Background="#B8F2C0"/>
+                <Button x:Name="FilterOverdueButton" Content="Overdue" Margin="6,0,0,0" Width="60" Background="#B8F2C0"/>
+                <Button x:Name="CompleteAllButton" Content="Complete All" Margin="12,0,0,0" Width="100" Background="#9EEAA0"/>
+                <Button x:Name="ClearCompletedButton" Content="Clear Completed" Margin="6,0,0,0" Width="120" Background="#9EEAA0"/>
             </StackPanel>
         </StackPanel>
 
-        <ListBox x:Name="TaskList" Height="300">
+        <ListBox x:Name="TaskList" Height="300" Background="#2E2E2E" Foreground="White" Padding="8">
             <ListBox.ItemTemplate>
                 <DataTemplate DataType="{x:Type models:TaskItem}">
-                    <StackPanel Orientation="Vertical" Margin="4">
+                    <Border Background="#2A2A2A" CornerRadius="6" Padding="8" Margin="4">
+                        <StackPanel Orientation="Vertical">
                         <StackPanel Orientation="Horizontal">
                             <CheckBox IsChecked="{Binding IsCompleted}" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding Title}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding Title}" Margin="8,0,0,0" VerticalAlignment="Center" IsVisible="{Binding IsEditing, Converter={StaticResource NotConverter}}" PointerReleased="OnTitleDoubleTapped" Foreground="White"/>
+                            <TextBox Text="{Binding Title, Mode=TwoWay}" Margin="8,0,0,0" VerticalAlignment="Center" IsVisible="{Binding IsEditing}" LostFocus="OnTitleLostFocus" KeyDown="OnTitleEditKeyDown" Background="#0B3A2A" Foreground="White" BorderThickness="0"/>
                         </StackPanel>
                         <ItemsControl ItemsSource="{Binding Tags}">
                             <ItemsControl.ItemsPanel>
@@ -37,13 +63,19 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="#EEE" CornerRadius="4" Padding="4" Margin="4">
-                                        <TextBlock Text="{Binding .}" FontSize="12"/>
+                                    <Border Background="#123B2B" CornerRadius="4" Padding="4" Margin="4">
+                                        <TextBlock Text="{Binding .}" FontSize="12" Foreground="White"/>
                                     </Border>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                    </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="2">
+                            <TextBlock Text="Due: " FontSize="12" Margin="4,0,0,0" Foreground="White"/>
+                            <TextBlock Text="{Binding DueDate, StringFormat=d}" FontSize="12" Margin="2,0,0,0" Foreground="White"/>
+                            <TextBlock Text="(Overdue)" Foreground="Red" Margin="6,0,0,0" IsVisible="{Binding IsOverdue}" />
+                        </StackPanel>
+                        </StackPanel>
+                    </Border>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
